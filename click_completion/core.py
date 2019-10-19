@@ -188,12 +188,8 @@ def do_fish_complete(cli, prog_name):
         True if the completion was successful, False otherwise
     """
     commandline = os.environ['COMMANDLINE']
-    args = split_args(commandline)[1:]
-    if args and not commandline.endswith(' '):
-        incomplete = args[-1]
-        args = args[:-1]
-    else:
-        incomplete = ''
+    args, incomplete = split_args(commandline)
+    args = args[1:]
 
     for item, help in get_choices(cli, prog_name, args, incomplete):
         if help:

@@ -101,23 +101,35 @@ def split_args(line):
 
     Returns
     -------
-    [str]
-        The line split in separated arguments
+    [str], str
+        The line split in separated arguments, plus the last incomplete argument (if any)
     """
     lex = shlex.shlex(line, posix=True)
     lex.whitespace_split = True
     lex.commenters = ''
     res = []
+    last_state = lex.state
     try:
         while True:
+            last_state = lex.state
             res.append(next(lex))
     except ValueError:  # No closing quotation
-        pass
+        return res, lex.token
     except StopIteration:  # End of loop
-        pass
-    if lex.token:
-        res.append(lex.token)
-    return res
+        if last_state is None:
+            return res[:-1], res[-1]
+        else:
+            return res, ''
+
+
+def test_split_args():
+    assert split_args("foo bar") == (["foo"], "bar")
+    assert split_args("foo bar ") == (["foo", "bar"], "")
+    assert split_args("foo 'bar") == (["foo"], "bar")
+    assert split_args("foo 'bar ") == (["foo"], "bar ")
+    assert split_args("foo 'bar baz'") == (["foo"], "bar baz")
+    assert split_args("foo 'bar baz' ") == (["foo", "bar baz"], "")
+    assert split_args("foo bar\\ ") == (["foo"], "bar ")
 
 
 def get_auto_shell():
